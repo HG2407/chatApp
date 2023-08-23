@@ -39,7 +39,7 @@ import {io} from 'socket.io-client';
         },
 
         created() {
-            this.socket = io('http://localhost:8000');
+            this.socket = io();
             this.socket.on('messageFromServer', (msg) => {
                 this.divNumber++;
                 this.storedMessage.push(msg);
