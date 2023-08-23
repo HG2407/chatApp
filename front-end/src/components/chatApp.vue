@@ -1,11 +1,10 @@
 <template>
-    <!-- <div class="joinChat">
-        <input type="text" placeholder="What do you want other users to call you ?" style="width:24rem;" v-model="userName">
-        <button @click="userNameSubmit">Submit</button>
-    </div> -->
+    <!-- <p>{{ myUN }}</p> -->
     <div class="display_box" style="">
         <div style="height: 32rem;" class="message-box" ref="message-box">
-            <div class="message" v-for="number in divNumber" :key="number"> {{ storedMessage[number-1] }}</div>
+            <div class="message" v-for="number in divNumber" :key="number"> 
+                <p class="userName">{{ storedMessage[number-1].name }}</p>
+                {{ storedMessage[number-1].msg }}</div>
         </div>
         <input type="text" id="messageInput" placeholder="Write a message..." 
         style="width: 100%; height: 2rem; border-radius: 0.5rem; margin-top:1rem;" @keydown.enter="send()" v-model="messageInput">
@@ -14,7 +13,9 @@
 </template>
 
 <script>
-import {io} from 'socket.io-client';
+import { initSocket } from '../socket.js';
+import {socket} from '../socket.js';
+
     export default {
         name: 'Chat_App',
         data() {
@@ -23,14 +24,14 @@ import {io} from 'socket.io-client';
                 messageInput: '',
                 storedMessage: [],
                 socket: null,
-                userName: ''
+                myUN: this.$store.state.userName,
             }
         },
         methods: {
             send() {
-                this.socket.emit('messageFromClient', this.messageInput);
+                this.socket.emit('dataEmitted', {event: 'messageFromClient', name:this.myUN, msg: this.messageInput});
                 this.divNumber++;
-                this.storedMessage.push(this.messageInput);
+                this.storedMessage.push({name:this.myUN, msg: this.messageInput});
                 this.$nextTick(() => {
                     this.$refs['message-box'].scrollTop = this.$refs['message-box'].scrollHeight;
                 });
@@ -38,27 +39,36 @@ import {io} from 'socket.io-client';
             }
         },
 
-        created() {
-            this.socket = io();
-            this.socket.on('messageFromServer', (msg) => {
-                this.divNumber++;
-                this.storedMessage.push(msg);
+        async created() {
+            initSocket();
+            this.socket = socket;
+            console.log(this.socket);
+
+            await this.socket.on('msgHistory', (msgHistory) => {
+                this.divNumber = msgHistory.length;
+                console.log(this.divNumber);
+                this.storedMessage.push(...msgHistory);
                 this.$nextTick(() => {
                     this.$refs['message-box'].scrollTop = this.$refs['message-box'].scrollHeight;
                 });
             });
 
-            this.socket.on('messageHistory', (msgHistory) => {
-                this.divNumber = msgHistory.length;
-                this.storedMessage = msgHistory;
+            this.socket.on('myUserName', (userName) => {
+                this.myUN = userName;
+                console.log(this.myUN);
+            });
+
+            this.socket.on('messageFromServer', (data) => {
+                this.divNumber++;
+                this.storedMessage.push({name: data.name, msg: data.msg});
                 this.$nextTick(() => {
                     this.$refs['message-box'].scrollTop = this.$refs['message-box'].scrollHeight;
                 });
             });
         },
-        beforeUnmount() {
-            this.socket.emit('disconnected');
-        }
+        // beforeUnmount() {
+        //     this.socket.emit('disconnected');
+        // }
     }
 </script>
 
@@ -90,5 +100,12 @@ import {io} from 'socket.io-client';
     background-color: coral;
     border-radius: 0.5rem;
     padding: 0.4rem;
+}
+
+.userName {
+    margin: 0 0 0.4rem 0;
+    font-size: 0.7rem;
+    font-weight: bold;
+    color: crimson;
 }
 </style>

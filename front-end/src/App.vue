@@ -1,14 +1,14 @@
 <template>
-  <Chat_App></Chat_App>
+  <RouterView></RouterView>
 </template>
 
 <script>
-import Chat_App from './components/chatApp.vue';
+// import Chat_App from './components/chatApp.vue';
 export default {
   name: 'App',
-  components: {
-    Chat_App,
-  }
+  // components: {
+  //   Chat_App,
+  // }
 }
 </script>
 

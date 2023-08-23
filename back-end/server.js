@@ -11,29 +11,30 @@ let io = socketio(server, {
     }
   });
 
-const users = new Set();
 let messageHistory = [];
-let joinedPeople = 0;
 
 io.on('connection', (client) => {
-    joinedPeople++;
-    console.log(joinedPeople);
-    console.log('New Websocket connection');
-    client.emit('messageHistory', messageHistory);
 
-    client.on('messageFromClient', (msg) => {
-        messageHistory.push(msg);
-        client.broadcast.emit('messageFromServer', msg);
+    // WARNING: `socket.to(socket.id).emit()` will NOT work, as it will send to everyone in the room
+    // named `socket.id` but the sender. Please use the classic `socket.emit()` instead.
+    // from socket.io documentation
+    client.emit('msgHistory', messageHistory);
+
+    client.on('dataEmitted', (data) => {
+        if(data.event == 'messageFromClient') {
+            messageHistory.push({name: data.name, msg: data.msg});
+            client.broadcast.emit('messageFromServer', {name: data.name, msg: data.msg})
+        }
+    });
+
+    client.on('disconnect', () => {
+        console.log('disconnected');
+        client.disconnect();
     })
 
-    client.on('disconnected', () => {
-        joinedPeople--;
-        console.log(joinedPeople);
-        console.log('someone disconnected');
-    })
 })
 
-// is this correct ?
+
 app.use(express.static(path.join(__dirname, './dist')));
 server.listen(8000, () => {
     console.log('server is listening at port: 8000');

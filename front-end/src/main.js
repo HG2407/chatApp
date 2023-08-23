@@ -1,4 +1,26 @@
-import { createApp } from 'vue'
-import App from './App.vue'
+import { createApp } from 'vue';
+import store from './store/index.js';
+import App from './App.vue';
+import { createRouter, createWebHistory } from 'vue-router';
 
-createApp(App).mount('#app')
+
+let routes = [
+    {
+        path: '/',
+        component: () => import('./components/homePage.vue')
+    },
+    {
+        path: '/chatRoom',
+        component: () => import('./components/chatApp.vue')
+    }
+]
+
+let router = createRouter({
+    history: createWebHistory(process.env.BASE_URL),
+    routes,
+})
+
+
+
+createApp(App).use(router).use(store).mount('#app');
+
