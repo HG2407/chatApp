@@ -12,9 +12,34 @@ let io = socketio(server, {
   });
 
 let messageHistory = [];
+let roomMessageList = new Map();
+let joinedPeople = 0;
 
 io.on('connection', (client) => {
 
+
+    //for room Chat
+    client.on('roomData', (data) => {
+        let roomName;
+        if(data.event == 'create') {
+            client.emit('roomId', client.id);
+            roomName = data.name;
+        } else if(data.event == 'joinRoom') {
+            client.join(data.id);
+        } else if(data.event == 'sendRoomMsgHistory') {
+            if(!roomMessageList.has(data.roomId)) {
+                roomMessageList.set(data.roomId, []);
+            } 
+            let roomInfo = roomMessageList.get(data.roomId);
+            io.in(data.roomId).emit('roomMsgHistory', {msgHistory: roomInfo, roomName: roomName});
+
+        } else if(data.event == 'messageTyped') {
+            roomMessageList.get(data.roomId).push({name: data.name, msg: data.msg});
+            client.to(data.roomId).emit('messageToRoomFromServer', {name: data.name, msg: data.msg});
+        }
+    })
+
+    //for global Chat
     // WARNING: `socket.to(socket.id).emit()` will NOT work, as it will send to everyone in the room
     // named `socket.id` but the sender. Please use the classic `socket.emit()` instead.
     // from socket.io documentation
@@ -29,6 +54,7 @@ io.on('connection', (client) => {
 
     client.on('disconnect', () => {
         console.log('disconnected');
+        client.emit('JoinedPeople', --joinedPeople);
         client.disconnect();
     })
 

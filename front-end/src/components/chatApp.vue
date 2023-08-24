@@ -1,5 +1,4 @@
 <template>
-    <!-- <p>{{ myUN }}</p> -->
     <div class="display_box" style="">
         <div style="height: 32rem;" class="message-box" ref="message-box">
             <div class="message" v-for="number in divNumber" :key="number"> 
@@ -24,7 +23,8 @@ import {socket} from '../socket.js';
                 messageInput: '',
                 storedMessage: [],
                 socket: null,
-                myUN: this.$store.state.userName,
+                myUN: this.$store.state.userName || localStorage.getItem('userName') ,
+                peopleInChat: 0
             }
         },
         methods: {
@@ -39,12 +39,12 @@ import {socket} from '../socket.js';
             }
         },
 
-        async created() {
+        created() {
             initSocket();
             this.socket = socket;
             console.log(this.socket);
 
-            await this.socket.on('msgHistory', (msgHistory) => {
+            this.socket.on('msgHistory', (msgHistory) => {
                 this.divNumber = msgHistory.length;
                 console.log(this.divNumber);
                 this.storedMessage.push(...msgHistory);
@@ -52,6 +52,11 @@ import {socket} from '../socket.js';
                     this.$refs['message-box'].scrollTop = this.$refs['message-box'].scrollHeight;
                 });
             });
+
+            this.socket.on('JoinedPeople', (number) => {
+                this.peopleInChat = number;
+                console.log(this.peopleInChat);
+            })
 
             this.socket.on('myUserName', (userName) => {
                 this.myUN = userName;

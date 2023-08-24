@@ -12,6 +12,10 @@ let routes = [
     {
         path: '/chatRoom',
         component: () => import('./components/chatApp.vue')
+    },
+    {
+        path: '/room/:id',
+        component: () => import('./components/roomPage.vue')
     }
 ]
 
