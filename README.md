@@ -1,2 +1,2 @@
 # chatApp
-Working demo -> https://chat-app-agl5.onrender.com/
+Live demo -> https://chat-app-agl5.onrender.com/
